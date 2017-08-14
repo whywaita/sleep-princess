@@ -60,15 +60,16 @@ func validate_ip(ip string) bool {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
-		//t, _ := template.ParseFiles("views/index.html")
-		//t.Execute(w, nil)
 		io.WriteString(w, html)
 	} else if r.Method == "POST" {
 		r.ParseForm()
 		input_url := r.Form["ip"][0]
-		_, err := url.Parse(input_url)
-		if err != nil {
+		_, err_parse := url.Parse(input_url)
+		err_vaild := validate_ip(input_url)
+		if err_parse != nil {
 			io.WriteString(w, "invaild URI!")
+		} else if err_vaild != true {
+			io.WriteString(w, "invaild IP address")
 		} else {
 			go attack_w_goroutine("http://" + r.Form["ip"][0] + ":80")
 
