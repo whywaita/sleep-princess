@@ -1,0 +1,12 @@
+[Unit]
+Description=Go to Heaven
+After=network.target
+
+[Service]
+User=root
+Restart=always
+Type=simple
+ExecStart=/opt/bin/heaven
+
+[Install]
+WantedBy=multi-user.target
