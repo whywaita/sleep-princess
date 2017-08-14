@@ -63,7 +63,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		input_url := r.Form["ip"][0]
 		_, err := url.Parse(input_url)
-		fmt.Println(input_url)
 		if err != nil {
 			io.WriteString(w, "invaild URI!")
 		} else {
