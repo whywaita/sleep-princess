@@ -2,17 +2,25 @@ package main
 
 import (
 	"bytes"
-	"fmt"
-	"html/template"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"runtime"
-	"strconv"
 	"sync"
 )
+
+var html = `
+<html>
+  <body>
+    <h1>Bench marker</h1>
+    <form action="." method="POST">
+      Your IP Address: <input type="text" name="ip" placeholder="0.0.0.0">
+      <input type="submit" value="start!">
+    </form>
+  </body>
+</html>
+`
 
 func attack_w_goroutine(url string) {
 	count := 0
@@ -28,10 +36,6 @@ func attack_w_goroutine(url string) {
 			resp, _ := client.Do(req)
 			defer resp.Body.Close()
 
-			_, _ = ioutil.ReadAll(resp.Body)
-
-			fmt.Println("count :" + strconv.Itoa(count))
-			fmt.Println("Goroutine : " + strconv.Itoa(runtime.NumGoroutine()))
 		}()
 		count++
 	}
@@ -39,8 +43,8 @@ func attack_w_goroutine(url string) {
 }
 
 func validate_ip(ip string) bool {
-	start_ip := net.ParseIP("192.168.0.0")
-	end_ip := net.ParseIP("192.168.255.255")
+	start_ip := net.ParseIP("192.168.15.0")
+	end_ip := net.ParseIP("192.168.15.255")
 	trial := net.ParseIP(ip)
 
 	if trial.To4() == nil {
@@ -54,11 +58,11 @@ func validate_ip(ip string) bool {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
 
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("views/index.html")
-		t.Execute(w, nil)
+		//t, _ := template.ParseFiles("views/index.html")
+		//t.Execute(w, nil)
+		io.WriteString(w, html)
 	} else if r.Method == "POST" {
 		r.ParseForm()
 		input_url := r.Form["ip"][0]
@@ -71,12 +75,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, "OK!")
 		}
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
-	// url := "http://localhost:8080/"
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	http.HandleFunc("/", indexHandler)
-	http.ListenAndServe(":8001", nil)
+	http.ListenAndServe(":80", nil)
 }
