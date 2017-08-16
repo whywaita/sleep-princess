@@ -14,6 +14,9 @@ var html = `
       html, body, main {
         height: 100%;
         background: #660066;
+        background-image: linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%, #444), linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%, #444);
+        background-position: 0 0, 25px 25px;
+        background-size: 50px 50px;
       }
 
       main {
@@ -23,7 +26,7 @@ var html = `
       }
 
       .submit {
-        border: solid 1px #ccc;
+        border: solid 30px #ccc;
         padding: 10px 30px;
         margin: 0 0 20px;
         font-size: 1.2in;
@@ -45,7 +48,7 @@ func attack_w_goroutine(url string) {
 	count := 0
 	var wg sync.WaitGroup
 
-	for count < 10 {
+	for count < 1000 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
