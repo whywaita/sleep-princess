@@ -1,110 +1,62 @@
 package main
 
 import (
-	"io"
+	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"runtime"
-	"sync"
+
+	"github.com/sugyan/termburn"
+	"golang.org/x/sync/errgroup"
 )
 
-var html = `
-<html>
-  <head>
-    <style>
-      html, body, main {
-        height: 100%;
-        background: #660066;
-        background-image: linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%, #444), linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%, #444);
-        background-position: 0 0, 25px 25px;
-        background-size: 50px 50px;
-      }
+func make_a_magic(url string) error {
+	var g errgroup.Group
+	c := make(chan bool, 700)
 
-      main {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .submit {
-        border: solid 30px #ccc;
-        padding: 10px 30px;
-        margin: 0 0 20px;
-        font-size: 1.2in;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <form action="." method="POST">
-        <input type="submit"class="submit" value="力を行使する">
-      </form>
-    </main>
-  </body>
-</html>
-`
-
-func attack_w_goroutine(url string) {
-	count := 0
-	var wg sync.WaitGroup
-
-	for count < 1000 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			req, _ := http.NewRequest("GET", url, nil)
+	for count := 0; count < 1000; count++ {
+		c <- true
+		g.Go(func() error {
+			defer func() { <-c }()
+			req, err := http.NewRequest("GET", url, nil)
+			if err != nil {
+				return errors.New("案山子が燃えてしまった…")
+			}
+			req.Header.Set("User-Agent", "Super Ultra Hyper Miracle Eccentric Wonder Mighty Ultimate Magic")
 
 			client := new(http.Client)
-			resp, _ := client.Do(req)
+			resp, err := client.Do(req)
+			if err != nil {
+				return errors.New("案山子が燃えてしまった…")
+			}
 			defer resp.Body.Close()
 
-		}()
-		count++
-	}
-	wg.Wait()
-}
+			if resp.StatusCode >= 400 {
+				return errors.New("案山子が燃えてしまった…")
+			}
 
-//func validate_ip(ip string) bool {
-//	start_ip := net.ParseIP("192.168.15.0")
-//	end_ip := net.ParseIP("192.168.15.255")
-//	trial := net.ParseIP(ip)
-//
-//	if trial.To4() == nil {
-//		return false
-//	}
-//	if bytes.Compare(trial, start_ip) >= 0 && bytes.Compare(trial, end_ip) <= 0 {
-//		return true
-//	}
-//
-//	return false
-//}
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method == "GET" {
-		io.WriteString(w, html)
-	} else if r.Method == "POST" {
-		//r.ParseForm()
-		//input_url := r.Form["ip"][0]
-		//_, err_parse := url.Parse(input_url)
-		//err_vaild := validate_ip(input_url)
-		//if err_parse != nil {
-		//	io.WriteString(w, "invaild URI!")
-		//} else if err_vaild != true {
-		//	io.WriteString(w, "invaild IP address")
-		//} else {
-		go attack_w_goroutine("http://192.168.15.5:80")
-
-		io.WriteString(w, "力はふるわれた…")
-		//}
+			return nil
+		})
 	}
 
-	w.WriteHeader(http.StatusOK)
+	errG := g.Wait()
+	if errG != nil {
+		return errG
+	}
+
+	return nil
 }
 
 func main() {
+	fmt.Println("力を見せよう…")
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	err := make_a_magic("http://192.168.15.5:80")
+	if err != nil {
+		termburn.Run()
+		fmt.Println(err)
+		os.Exit(255)
+	}
 
-	http.HandleFunc("/", indexHandler)
-	http.ListenAndServe(":80", nil)
+	fmt.Println("魔法は正しく実行された！")
 }
